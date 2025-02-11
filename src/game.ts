@@ -19,8 +19,8 @@ export class GameManager {
     private provider: BrowserProvider;
     private signer!: Signer;
     private gameInterval: NodeJS.Timeout | null = null;
-    private readonly MAX_STAKE = parseEther("1"); // 1 ETH max stake
-    private readonly MIN_STAKE = parseEther("0.001"); // 0.001 ETH min stake
+    private readonly MAX_STAKE = parseEther("1"); 
+    private readonly MIN_STAKE = parseEther("0.001"); 
     private hasherContract: Contract | null = null;
 
     constructor(provider: any, signerAddress: string) {
@@ -95,7 +95,7 @@ export class GameManager {
             const signer = await this.ensureSigner();
             const salt = await this.generateSalt();
 
-            // Reuse hasher contract if already deployed
+      
             const hasher = await this.deployHasher();
             const hash = await hasher.hash(move, salt);
 
@@ -180,7 +180,6 @@ export class GameManager {
             const rps = new Contract(gameAddress, RPS_ABI, this.signer);
             const stake = await rps.stake();
 
-            // Validate stake is within bounds
             if (stake > this.MAX_STAKE || stake < this.MIN_STAKE) {
                 throw new Error("Invalid stake amount");
             }

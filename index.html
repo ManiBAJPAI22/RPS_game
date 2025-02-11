@@ -156,7 +156,7 @@
             let currentRole = "";
             let gameInterval;
 
-            // Initialize wallet connection
+           
             window.showWalletProviders = function () {
                 const walletContainer =
                     document.getElementById("walletProviders");
@@ -164,14 +164,14 @@
 
                 listProviders(walletContainer);
 
-                // Listen for successful wallet connection
+               
                 window.addEventListener("wallet:connected", async (event) => {
                     const { provider, address } = event.detail;
                     gameManager = new GameManager(provider, address);
 
                     GameUI.updateStatus(`Connected: ${address}`, "success");
 
-                    // Show appropriate sections based on role
+                    
                     if (currentRole === "player1") {
                         GameUI.toggleSection("hashSection", true);
                     } else {
@@ -189,7 +189,7 @@
                 GameUI.toggleSection("player2Sections", role === "player2");
             };
 
-            // Player 1 actions
+            
             window.generateHash = async function () {
                 try {
                     const move = document.getElementById("move").value;
@@ -221,15 +221,15 @@
                         stake
                     );
 
-                    // Show game address prominently
+                   
                     GameUI.showGameAddress(gameAddress);
 
-                    // Update reveal section and start monitoring
+                   
                     document.getElementById("revealAddress").value =
                         gameAddress;
                     monitorGameState(gameAddress);
 
-                    // Copy to clipboard functionality
+                   
                     navigator.clipboard
                         .writeText(gameAddress)
                         .then(() =>
@@ -247,7 +247,7 @@
                 }
             };
 
-            // Add reveal move action
+          
             window.revealMove = async function () {
                 try {
                     const gameAddress =
@@ -265,7 +265,7 @@
                 }
             };
 
-            // Player 2 actions
+          
             window.checkAndJoinGame = async function () {
                 try {
                     await gameManager.checkAndJoinGame(
@@ -280,7 +280,7 @@
                 }
             };
 
-            // Event listeners
+          
             document.getElementById("gameAddress")
                 .addEventListener("input", async function() {
                     const address = this.value;
@@ -293,9 +293,7 @@
                     }
                 });
 
-            // ... Keep other necessary event listeners and game state monitoring functions ...
 
-            // Initialize game state monitoring
             async function monitorGameState(gameAddress) {
                 if (gameInterval) clearInterval(gameInterval);
                 await gameManager.startGameStateMonitoring(
