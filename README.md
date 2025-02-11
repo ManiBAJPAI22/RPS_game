@@ -30,7 +30,7 @@ The game follows the extended rules from The Big Bang Theory:
 - Node.js (v14 or higher)  
 - npm or yarn  
 - MetaMask or another Web3 wallet  
-- Some test ETH on your preferred network  
+- Some test ETH on your Sepolia network  
 
 ## Installation
 
