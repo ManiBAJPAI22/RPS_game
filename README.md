@@ -1,4 +1,4 @@
-# Rock Paper Scissors Lizard Spock - Ethereum dApp
+# Rock Paper Scissors Lizard Spock - Ethereum Sepolia Testnet dApp
 
 A decentralized implementation of the Rock Paper Scissors Lizard Spock game on Ethereum. This project allows players to compete in the extended version of Rock Paper Scissors with ETH stakes.
 
@@ -36,8 +36,11 @@ The game follows the extended rules from The Big Bang Theory:
 
 1. Clone the repository:  
 ```bash
-git clone [(https://github.com/ManiBAJPAI22/RPS_game)]
-cd [RPS_game]
+git clone https://github.com/ManiBAJPAI22/RPS_game
+cd RPS_game
 npm install
 npm run dev
 ```
+
+
+
