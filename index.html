@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Rock Paper Scissors Lizard Spock</title>
+        <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
+        <style>
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            .hidden {
+                display: none;
+            }
+            .section {
+                margin: 20px 0;
+                padding: 15px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+            }
+            .important {
+                color: #d63031;
+                font-weight: bold;
+            }
+            .success {
+                color: #00b894;
+            }
+            .error {
+                color: #d63031;
+            }
+            button {
+                padding: 10px 20px;
+                margin: 5px;
+                border-radius: 5px;
+                border: none;
+                background-color: #0984e3;
+                color: white;
+                cursor: pointer;
+            }
+            button:hover {
+                background-color: #0870c0;
+            }
+            input,
+            select {
+                padding: 8px;
+                margin: 5px;
+                border-radius: 5px;
+                border: 1px solid #ddd;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Rock Paper Scissors Lizard Spock</h1>
+
+            <!-- Role Selection Section -->
+            <div id="roleSelector" class="section">
+                <h2>Select Your Role</h2>
+                <button onclick="selectRole('player1')">
+                    Player 1 (Create Game)
+                </button>
+                <button onclick="selectRole('player2')">
+                    Player 2 (Join Game)
+                </button>
+            </div>
+
+            <!-- Wallet Connection Section -->
+            <div id="connectionStatus" class="section hidden">
+                <h2>Connect Your Wallet</h2>
+                <button onclick="showWalletProviders()">Connect Wallet</button>
+                <div id="walletProviders" style="display: none"></div>
+            </div>
+
+            <!-- Player 1 Sections -->
+            <div id="player1Sections" class="hidden">
+                <!-- Step 1: Generate Hash -->
+                <div class="section hidden" id="hashSection">
+                    <h2>Step 1: Generate Move Hash (Player 1)</h2>
+                    <select id="move">
+                        <option value="1">Rock</option>
+                        <option value="2">Paper</option>
+                        <option value="3">Scissors</option>
+                        <option value="4">Spock</option>
+                        <option value="5">Lizard</option>
+                    </select>
+                    <button onclick="generateHash()">Generate Hash</button>
+                    <div id="hashResult"></div>
+                </div>
+
+                <!-- Step 2: Create Game -->
+                <div class="section hidden" id="createGameSection">
+                    <h2>Step 2: Create Game (Player 1)</h2>
+                    <input id="opponent" placeholder="Opponent Address" />
+                    <input
+                        id="stake"
+                        type="number"
+                        step="0.01"
+                        placeholder="Stake in ETH" />
+                    <button onclick="createGame()">Create Game</button>
+                    <div id="gameResult"></div>
+                </div>
+
+                <!-- Step 4: Reveal Move -->
+                <div class="section hidden" id="revealSection">
+                    <h2>Step 4: Reveal Move (Player 1)</h2>
+                    <input
+                        id="revealAddress"
+                        placeholder="Game Contract Address" />
+                    <button onclick="revealMove()">Reveal Move</button>
+                </div>
+            </div>
+
+            <!-- Player 2 Sections -->
+            <div id="player2Sections" class="hidden">
+                <!-- Step 3: Join Game -->
+                <div class="section hidden" id="joinGameSection">
+                    <h2>Step 3: Join Game (Player 2)</h2>
+                    <input
+                        id="gameAddress"
+                        placeholder="Game Contract Address" />
+                    <div id="stakeInfo"></div>
+                    <select id="move2">
+                        <option value="1">Rock</option>
+                        <option value="2">Paper</option>
+                        <option value="3">Scissors</option>
+                        <option value="4">Spock</option>
+                        <option value="5">Lizard</option>
+                    </select>
+                    <button onclick="checkAndJoinGame()">Join Game</button>
+                </div>
+            </div>
+
+            <div id="status"></div>
+        </div>
+
+        <script type="module">
+            import { GameManager } from "./src/game";
+            import { GameUI } from "./src/ui";
+            import {
+                validateEthereumAddress,
+                validateStake,
+                handleError,
+            } from "./src/utils";
+            import {
+                SEPOLIA_CHAIN_ID,
+                MOVE_MAP,
+                GAME_LOGIC,
+            } from "./src/constants";
+            import {
+                listProviders,
+                getSelectedProvider,
+                getSelectedAddress,
+            } from "./src/providers";
+
+            let gameManager;
+            let currentRole = "";
+            let gameInterval;
+
+            // Initialize wallet connection
+            window.showWalletProviders = function () {
+                const walletContainer =
+                    document.getElementById("walletProviders");
+                walletContainer.style.display = "block";
+
+                listProviders(walletContainer);
+
+                // Listen for successful wallet connection
+                window.addEventListener("wallet:connected", async (event) => {
+                    const { provider, address } = event.detail;
+                    gameManager = new GameManager(provider, address);
+
+                    GameUI.updateStatus(`Connected: ${address}`, "success");
+
+                    // Show appropriate sections based on role
+                    if (currentRole === "player1") {
+                        GameUI.toggleSection("hashSection", true);
+                    } else {
+                        GameUI.toggleSection("joinGameSection", true);
+                    }
+                });
+            };
+
+            window.selectRole = function (role) {
+                currentRole = role;
+                GameUI.toggleSection("roleSelector", false);
+                GameUI.toggleSection("connectionStatus", true);
+
+                GameUI.toggleSection("player1Sections", role === "player1");
+                GameUI.toggleSection("player2Sections", role === "player2");
+            };
+
+            // Player 1 actions
+            window.generateHash = async function () {
+                try {
+                    const move = document.getElementById("move").value;
+                    const hash = await gameManager.generateHash(move);
+
+                    GameUI.showGameResult(`
+                        <div class="success">
+                            <p><strong>Hash generated successfully!</strong></p>
+                            <p>Move: ${MOVE_MAP[move]}</p>
+                            <p>Hash: ${hash}</p>
+                        </div>
+                    `);
+
+                    GameUI.toggleSection("createGameSection", true);
+                } catch (error) {
+                    GameUI.updateStatus(
+                        handleError("Hash Generation", error),
+                        "error"
+                    );
+                }
+            };
+
+            window.createGame = async function () {
+                try {
+                    const opponent = document.getElementById("opponent").value;
+                    const stake = document.getElementById("stake").value;
+                    const gameAddress = await gameManager.createGame(
+                        opponent,
+                        stake
+                    );
+
+                    // Show game address prominently
+                    GameUI.showGameAddress(gameAddress);
+
+                    // Update reveal section and start monitoring
+                    document.getElementById("revealAddress").value =
+                        gameAddress;
+                    monitorGameState(gameAddress);
+
+                    // Copy to clipboard functionality
+                    navigator.clipboard
+                        .writeText(gameAddress)
+                        .then(() =>
+                            GameUI.updateStatus(
+                                "Game address copied to clipboard!",
+                                "success"
+                            )
+                        )
+                        .catch(() => {});
+                } catch (error) {
+                    GameUI.updateStatus(
+                        handleError("Game Creation", error),
+                        "error"
+                    );
+                }
+            };
+
+            // Add reveal move action
+            window.revealMove = async function () {
+                try {
+                    const gameAddress =
+                        document.getElementById("revealAddress").value;
+                    await gameManager.revealMove(gameAddress);
+                    GameUI.updateStatus(
+                        "Move revealed successfully!",
+                        "success"
+                    );
+                } catch (error) {
+                    GameUI.updateStatus(
+                        handleError("Move Revelation", error),
+                        "error"
+                    );
+                }
+            };
+
+            // Player 2 actions
+            window.checkAndJoinGame = async function () {
+                try {
+                    await gameManager.checkAndJoinGame(
+                        document.getElementById("gameAddress").value,
+                        document.getElementById("move2").value
+                    );
+                } catch (error) {
+                    GameUI.updateStatus(
+                        handleError("Game Joining", error),
+                        "error"
+                    );
+                }
+            };
+
+            // Event listeners
+            document.getElementById("gameAddress")
+                .addEventListener("input", async function() {
+                    const address = this.value;
+                    if (address.length === 42 && gameManager) {
+                        try {
+                            await gameManager.displayStakeAmount(address);
+                        } catch (error) {
+                            GameUI.updateStatus(handleError("Loading Game", error), "error");
+                        }
+                    }
+                });
+
+            // ... Keep other necessary event listeners and game state monitoring functions ...
+
+            // Initialize game state monitoring
+            async function monitorGameState(gameAddress) {
+                if (gameInterval) clearInterval(gameInterval);
+                await gameManager.startGameStateMonitoring(
+                    gameAddress,
+                    currentRole,
+                    GameUI
+                );
+            }
+        </script>
+    </body>
+</html>
+
